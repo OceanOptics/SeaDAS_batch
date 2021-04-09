@@ -26,7 +26,7 @@ Example:
      - **`OC`**  
      - **`SST`**  [not tested]  
 
-- **`-prod`** **list of product to compute specific to each instrument**  
+- **`--prod`** **list of product to compute specific to each instrument**  
 
 - **`-p`** **parallel computing**  
     Specify number of process:
