@@ -14,7 +14,7 @@ Example:
 /home/username/ocssw/scripts/ocssw_runner --ocsswroot /home/username/ocssw /home/username/.conda/envs/SeaDAS/bin/python3.9 SeaDASbatchESA_L2.py --path /home/username/SeaDASbatch --project test01 -i MSI -p 12 -f
 
 ### Argument description:
-- **`--path`** **path working directory**  
+- **`--path`** **path to working directory**  
 
 - **`--project`** **project name (subdirectory)**  
 
