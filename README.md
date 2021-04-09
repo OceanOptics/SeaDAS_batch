@@ -36,7 +36,7 @@ Need to be run through a SeaDAS Virtual Env and ocssw_runner:
    - overwrite files with same name
 
 **`-q`** **quiet**  
-   - Quiet please ! getOC does not output any information relative to the download and querying of the points of interest.
+   - Quiet please !
 
 ### Usage examples:
     /home/username/ocssw/scripts/ocssw_runner --ocsswroot /home/username/ocssw /home/username/.conda/envs/SeaDAS/bin/python3.9 SeaDASbatchESA_L2.py --path /home/username/SeaDASbatch --project test01 -i MSI -p 12
