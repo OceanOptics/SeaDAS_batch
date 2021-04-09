@@ -10,8 +10,6 @@ Need to be run through a SeaDAS Virtual Env and ocssw_runner:
    /home/username/ocssw/scripts/ocssw_runner --ocsswroot /home/username/ocssw /home/username/.conda/envs/SeaDAS/bin/python3.9 SeaDASbatchESA_L2.py
 
 
-Example:
-/home/username/ocssw/scripts/ocssw_runner --ocsswroot /home/username/ocssw /home/username/.conda/envs/SeaDAS/bin/python3.9 SeaDASbatchESA_L2.py --path /home/username/SeaDASbatch --project test01 -i MSI -p 12 -f
 
 ### Argument description:
 - **`--path`** **path to working directory**  
@@ -42,9 +40,6 @@ Example:
 
 ### Usage examples:
     /home/username/ocssw/scripts/ocssw_runner --ocsswroot /home/username/ocssw /home/username/.conda/envs/SeaDAS/bin/python3.9 SeaDASbatchESA_L2.py --path /home/username/SeaDASbatch --project test01 -i MSI -p 12
-
     /home/username/ocssw/scripts/ocssw_runner --ocsswroot /home/username/ocssw /home/username/.conda/envs/SeaDAS/bin/python3.9 SeaDASbatchESA_L2.py --path /home/username/SeaDASbatch --project test01 -i OLCI -p 12
-
     /home/username/ocssw/scripts/ocssw_runner --ocsswroot /home/username/ocssw /home/username/.conda/envs/SeaDAS/bin/python3.9 SeaDASbatchESA_L2.py --path /home/username/SeaDASbatch --project test01 -i MSI -p 0 -f
-
     /home/username/ocssw/scripts/ocssw_runner --ocsswroot /home/username/ocssw /home/username/.conda/envs/SeaDAS/bin/python3.9 SeaDASbatchESA_L2.py --path /home/username/SeaDASbatch --project test01 -i MSI -p -1 -f
