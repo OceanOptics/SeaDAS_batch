@@ -62,9 +62,9 @@ def list_file(instrument):
 if __name__ == "__main__":
     from optparse import OptionParser
 
-    parser = OptionParser(usage="Usage: SeaDASbatchL2.py [options] [instrument]", version="SeaDASbatchL2 " + __version__)
+    parser = OptionParser(usage="Usage: SeaDASbatchESA_L2.py [options] [instrument]", version="SeaDASbatchESA_L2 " + __version__)
     parser.add_option("-i", "--instrument", action="store", dest="instrument",
-                      help="specify instrument, available options are: VIIRS, MODISA, MODIST, OLCI, SLSTR, MSI")
+                      help="specify instrument, available options are: OLCI, SLSTR, MSI")
     parser.add_option("--path", "--path-to-root", action="store", dest="PATH_TO_ROOT",
                       help="specify path to root directory")
     parser.add_option("--project", "--project-name", action="store", dest="project_name",
