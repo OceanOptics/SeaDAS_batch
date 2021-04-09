@@ -32,7 +32,7 @@ Example:
     Specify number of process:
     - 0 = disable parallel processing
     - -1 = any number of worker available
-    - # = # workers")
+    - 12 = 12 workers
 
 **`--f`** **force process**  
    - overwrite files with same name
