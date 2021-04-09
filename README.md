@@ -1,7 +1,7 @@
 SeaDASbatch
 =====
 
-_Batch processing of Ocean Color images using SeaDAS (ESA and NASA platforms) using default algorithm from SeaDAS
+_Batch processing of Ocean Color images using SeaDAS using default algorithm from SeaDAS
 to reproduce Ocean Color Rrs processing and compute additional products._
 
 Only OLCI and MSI for now.
