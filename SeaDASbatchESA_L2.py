@@ -16,10 +16,10 @@ __version__ = "0.1.0"
 verbose = False
 
 import os
-print(os.getcwd())
 from SD_ESAtools import *
 # from multiprocessing import Pool
 import sys
+import glob
 # import subprocess
 from multiprocessing.pool import ThreadPool
 import multiprocessing as mp
@@ -88,13 +88,13 @@ def getancil(references, instrument):
         print('Get ancillary ' + singlref + ' skip')
     return anc_list
 
-# Process #
-def L2processP2((ref, instrument, suite, product, force_process)): ### for python2
-    if instrument == 'OLCI' or instrument == 'SLSTR': ########## OLCI
-      process_SENT3_L1_to_L2(PATH_TO_DATA, ref, anc_list, instrument=instrument, suite=suite, l2_prod=product, get_anc=True, path_to_anc=PATH_TO_ANC, force=force_process)
-    elif instrument == 'MSI': ########## MSI
-      process_MSI_L1_to_L2(PATH_TO_DATA, ref, anc_list, suite=suite, l2_prod=product, get_anc=True, path_to_anc=PATH_TO_ANC, force=force_process)
-    print('### Done processing  ' + ref)
+# # Process #
+# def L2processP2((ref, instrument, suite, product, force_process)): ### for python2
+#     if instrument == 'OLCI' or instrument == 'SLSTR': ########## OLCI
+#       process_SENT3_L1_to_L2(PATH_TO_DATA, ref, anc_list, instrument=instrument, suite=suite, l2_prod=product, get_anc=True, path_to_anc=PATH_TO_ANC, force=force_process)
+#     elif instrument == 'MSI': ########## MSI
+#       process_MSI_L1_to_L2(PATH_TO_DATA, ref, anc_list, suite=suite, l2_prod=product, get_anc=True, path_to_anc=PATH_TO_ANC, force=force_process)
+#     print('### Done processing  ' + ref)
 
 def L2processP3(ref, instrument, suite, product, force_process): ### for python3
     if instrument == 'OLCI' or instrument == 'SLSTR': ########## OLCI
@@ -163,6 +163,8 @@ if __name__ == "__main__":
         print('SeaDASbatchL2.py: warning: option -f, --force-process option not specified, set to default=False')
 
     PATH_TO_ANC = os.path.join(options.PATH_TO_ROOT, 'anc')
+    if not os.path.isdir(PATH_TO_ANC):
+      os.mkdir(PATH_TO_ANC)
     PATH_TO_DATA = os.path.join(options.PATH_TO_ROOT, options.project_name)
 
     # list images
@@ -177,26 +179,26 @@ if __name__ == "__main__":
       print('########################################')
       print('[' + str(i+1) + '/' + str(n) + ']  ' + singlref)
       print('########################################')
-      if sys.version_info[0] < 3:
-        L2processP2((singlref, anc_list[i], options.instrument, options.suite, options.product, options.force_process)) ####### for python2
-      else:
-        L2processP3(singlref, anc_list[i], options.instrument, options.suite, options.product, options.force_process) ######### for python3
+      # if sys.version_info[0] < 3:
+      L2processP2((singlref, anc_list[i], options.instrument, options.suite, options.product, options.force_process)) ####### for python2
+      # else:
+      # L2processP3(singlref, anc_list[i], options.instrument, options.suite, options.product, options.force_process) ######### for python3
 
     else: # Process to images in parallel
       # Start pool (with the number of thread available on node)
       print('Start parallel process')
       pool = ThreadPool(processes=ntask)
-      if sys.version_info[0] < 3: ########################################################################################### for python2
-        pool.map(L2processP2, zip(references, anc_list, repeat(options.instrument), repeat(options.suite), repeat(options.product), repeat(options.force_process)))
-        pool.close()
-        pool.join()
-      else: ################################################################################################################# for python3
-        arg_list = list()
-        for ref in references:
-          arg_list.append([ref, anc_list, options.instrument, options.suite, options.product, options.force_process])
-        pool = ThreadPool(processes=ntask)
-        print('Start parallel process')
-        pool.starmap(L2processP3, arg_list)
+      # if sys.version_info[0] < 3: ########################################################################################### for python2
+      pool.map(L2processP2, zip(references, anc_list, repeat(options.instrument), repeat(options.suite), repeat(options.product), repeat(options.force_process)))
+      pool.close()
+      pool.join()
+      # else: ################################################################################################################# for python3
+      # arg_list = list()
+      # for ref in references:
+      #   arg_list.append([ref, anc_list, options.instrument, options.suite, options.product, options.force_process])
+      # pool = ThreadPool(processes=ntask)
+      # print('Start parallel process')
+      # pool.starmap(L2processP3, arg_list)
 
 
 
