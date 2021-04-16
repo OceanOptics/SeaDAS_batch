@@ -192,8 +192,9 @@ if __name__ == "__main__":
       # pool.join()
       # else: ################################################################################################################# for python3
       arg_list = list()
-      for ref in references:
-        arg_list.append([ref, anc_list, options.instrument, options.suite, options.product, options.force_process])
+      # for ref in references:
+      for ref, i in zip(references, range(len(references))):
+        arg_list.append([ref, anc_list[i], options.instrument, options.suite, options.product, options.force_process])
       pool = ThreadPool(processes=ntask)
       print('Start parallel process')
       pool.starmap(L2processP3, arg_list)
