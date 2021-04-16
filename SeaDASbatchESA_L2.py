@@ -78,7 +78,8 @@ def getancil(references, instrument):
         else:
           return -1
         anc_key = ''
-        for key in sorted(anc.iterkeys()):
+        # for key in sorted(anc.iterkeys()): # for seadas version < 8.00
+        for key in anc: # for seadas version = 8.00
           anc_key = '<>'.join([anc_key, '='.join([key, anc[key]])])
         anc_list.append(anc_key)
       else:
@@ -86,14 +87,14 @@ def getancil(references, instrument):
     return anc_list
 
 # # Process #
-# def L2processP2((ref, instrument, suite, product, force_process)): ### for python2
+# def L2processP2((ref, anc_list, instrument, suite, product, force_process)): ### for python2
 #     if instrument == 'OLCI' or instrument == 'SLSTR': ########## OLCI
 #       process_SENT3_L1_to_L2(PATH_TO_DATA, ref, anc_list, instrument=instrument, suite=suite, l2_prod=product, get_anc=True, path_to_anc=PATH_TO_ANC, force=force_process)
 #     elif instrument == 'MSI': ########## MSI
 #       process_MSI_L1_to_L2(PATH_TO_DATA, ref, anc_list, suite=suite, l2_prod=product, get_anc=True, path_to_anc=PATH_TO_ANC, force=force_process)
 #     print('### Done processing  ' + ref)
 
-def L2processP3(ref, instrument, suite, product, force_process): ### for python3
+def L2processP3(ref, anc_list, instrument, suite, product, force_process): ### for python3
     if instrument == 'OLCI' or instrument == 'SLSTR': ########## OLCI
       process_SENT3_L1_to_L2(PATH_TO_DATA, ref, anc_list, instrument=instrument, suite=suite, l2_prod=product, get_anc=True, path_to_anc=PATH_TO_ANC, force=force_process)
     elif instrument == 'MSI': ########## MSI

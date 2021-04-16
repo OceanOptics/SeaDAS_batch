@@ -72,7 +72,8 @@ def get_ancillaries(sensor, reference, path_to_data, path_to_anc, start_dt=None,
 
     # Start and Stop dt must be YYYYDDDHHMMSS strings
     if reference is not None and start_dt is None and stop_dt is None:
-        g = ga.getanc(file=ref,
+        # g = ga.getanc(file=ref, # for seadas version < 8.00
+        g = ga.getanc(filename=ref, # for seadas version = 8.00
                       sensor=sensor,
                       ancdir=os.path.join(path_to_anc, reference),
                       ancdb=os.path.join(path_to_anc, 'ancillary_data_' + reference + '.db'),
@@ -80,7 +81,8 @@ def get_ancillaries(sensor, reference, path_to_data, path_to_anc, start_dt=None,
                       timeout=60,
                       verbose=True)
     elif start_dt is not None and stop_dt is not None:
-        g = ga.getanc(file=ref,
+        # g = ga.getanc(file=ref, # for seadas version < 8.00
+        g = ga.getanc(filename=ref, # for seadas version = 8.00
                       start=start_dt,
                       stop=stop_dt,
                       sensor=sensor,
@@ -102,7 +104,7 @@ def get_ancillaries(sensor, reference, path_to_data, path_to_anc, start_dt=None,
     return g.files
 
 
-def process_SENT3_L1_to_L2(path_to_data, reference, instrument='OLCI', suite='OC', l2_prod=None, get_anc=True, path_to_anc=None, force=False):
+def process_SENT3_L1_to_L2(path_to_data, reference, ancil_list, instrument='OLCI', suite='OC', l2_prod=None, get_anc=True, path_to_anc=None, force=False):
     # Process OLCI Image from compressed L1 to L2_SEN3 using default Nasa Ocean Color parameters
     #   the function will change the current working directory
     ref = os.path.join(path_to_data, reference)
@@ -143,7 +145,7 @@ def process_SENT3_L1_to_L2(path_to_data, reference, instrument='OLCI', suite='OC
         print('Process L2: Skip')
 
 
-def process_MSI_L1_to_L2(path_to_data, reference, suite='OC', l2_prod=None, get_anc=True, path_to_anc=None, force=False):
+def process_MSI_L1_to_L2(path_to_data, reference, ancil_list, suite='OC', l2_prod=None, get_anc=True, path_to_anc=None, force=False):
     # Process OLCI Image from compressed L1 to L2_SEN3 using default Nasa Ocean Color parameters
     #   the function will change the current working directory
     ref = os.path.join(path_to_data, reference)
