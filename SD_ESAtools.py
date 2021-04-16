@@ -15,26 +15,30 @@ from subprocess import check_call
 import os
 import shutil
 import zipfile
+import sys
 
-# PATH TO OCSSW
-PATH_OCSSW = '/home/gbourdin/ocssw'
-OCSSW_RUNNER = PATH_OCSSW + '/scripts/ocssw_runner'
-
+# Setup path to OCSSW / OCSSW_RUNNER / modules directory in OCSSW
+PATH_OCSSW = '/home/bjiang/ocssw'
+OCSSW_RUNNER = PATH_OCSSW + '/bin/ocssw_runner'
+sys.path.insert(0, os.path.join(PATH_OCSSW, 'bin')) ## Seadas8.00 architecture
+# sys.path.insert(0, os.path.join(PATH_OCSSW, 'scripts')) ## Seadas version < 8.00 architecture
 
 # Import get_ancillaries modules
-import sys
-sys.path.insert(0, os.path.join(PATH_OCSSW, 'scripts'))
-import modules.anc_utils as ga
-from modules.setupenv import env
+import seadasutils.anc_utils as ga
+from seadasutils.setupenv import env
 
 
 def unzipS(ref, suffix):
     # Decompress zip
     if not os.path.isdir(ref + suffix):
         print('Decompress zip ' + ref + suffix + ' ...')
-        os.mkdir(ref + suffix)
-        zf = zipfile.ZipFile(ref + suffix + '.zip')
-        zf.extractall(path=os.path.dirname(ref + suffix))
+        if os.path.isfile(ref + suffix + '.zip'):
+            os.mkdir(ref + suffix)
+            zf = zipfile.ZipFile(ref + suffix + '.zip')
+            zf.extractall(path=os.path.dirname(ref + suffix))
+        else:
+            print(ref + suffix + '.zip not found')
+            return -1
     else:
         print('Decompress zip: Skip')
     return None
@@ -42,17 +46,16 @@ def unzipS(ref, suffix):
 
 def check_unzip(ref, suffix):
     # check unzip size
-    if len(os.listdir(ref + suffix)) == 0:
-        print("Empty directory, zipfile failed, restarting")
+    MAX_RETRIES = 30
+    j = 0
+    while len(os.listdir(ref + suffix)) == 0 and j < MAX_RETRIES:
+        print("Empty directory, unzip attempt [" + str(j+1) + "/" + str(MAX_RETRIES) + "] failed, restarting")
         shutil.rmtree(ref + suffix)
         unzipS(ref, suffix)
-        if len(os.listdir(ref + suffix)) == 0:
-            print("Empty directory, zipfile failed, restarting")
-            shutil.rmtree(ref + suffix)
-            unzipS(ref, suffix)
-            if len(os.listdir(ref + suffix)) == 0:
-                print("Empty directory, zipfile failed 3 times")
-                return -1
+        j += 1
+    if j+1 == MAX_RETRIES:
+        print(str(MAX_RETRIES) + ' unzip attempts failed, process aborted.')
+        return -1
 
 
 def get_ancillaries(sensor, reference, path_to_data, path_to_anc, start_dt=None, stop_dt=None):
@@ -61,13 +64,8 @@ def get_ancillaries(sensor, reference, path_to_data, path_to_anc, start_dt=None,
     # ./ocssw/scripts/ocssw_runner --ocsswroot /home/gbourdin/ocssw/ /home/gbourdin/.conda/envs/SeaDAS/bin/python process.py
 
     # add random sleep time to avoid overload OBPG server
-    sleep(random.uniform(0, 10))
-
-    if sensor == 'MODIS':
-        ref = os.path.join(path_to_data, reference) + '.L1A_LAC'
-    elif sensor == 'VIIRS':
-        ref = os.path.join(path_to_data, reference) + '.L1A_SNPP.nc'
-    elif sensor == 'OLCI' or sensor == 'SLSTR':
+    # sleep(random.uniform(0, 10))
+    if sensor == 'OLCI' or sensor == 'SLSTR':
         ref = os.path.join(path_to_data, reference) + '.SEN3'
     elif sensor == 'MSI':
         ref = os.path.join(path_to_data, reference) + '.SAFE'
@@ -104,11 +102,10 @@ def get_ancillaries(sensor, reference, path_to_data, path_to_anc, start_dt=None,
     return g.files
 
 
-    def process_SENT3_L1_to_L2(path_to_data, reference, instrument='OLCI', suite='OC', l2_prod=None, get_anc=True, path_to_anc=None, force=False):
+def process_SENT3_L1_to_L2(path_to_data, reference, instrument='OLCI', suite='OC', l2_prod=None, get_anc=True, path_to_anc=None, force=False):
     # Process OLCI Image from compressed L1 to L2_SEN3 using default Nasa Ocean Color parameters
     #   the function will change the current working directory
     ref = os.path.join(path_to_data, reference)
-
     if force:
         if os.path.isdir(ref + '.SEN3'):
             shutil.rmtree(ref + '.SEN3')
@@ -118,26 +115,15 @@ def get_ancillaries(sensor, reference, path_to_data, path_to_anc, start_dt=None,
             os.remove(ref + '.L2_SEN3_temp.nc')
 
     # Decompress zip
-    unzipS(ref, '.SEN3')
+    if not os.path.isdir(ref + '.SEN3'):
+        unzipS(ref, '.SEN3')
     # check unzip
     check_unzip(ref, '.SEN3')
-
-    if get_anc and not os.path.isfile(ref + '.L2_SEN3.nc'):
-        print('Get Ancillaries ...')
-        os.chdir(path_to_anc)
-        foo = ref.split('____')
-        foo2 = foo[1].split('_')
-        start_dt = datetime.strptime(foo2[0], '%Y%m%dT%H%M%S').strftime('%Y%j%H%M%S')
-        stop_dt = datetime.strptime(foo2[1], '%Y%m%dT%H%M%S').strftime('%Y%j%H%M%S')
-        # create ancillary directory specific to that image to avoid conflict between threads
-        if not os.path.isdir(os.path.join(path_to_anc, reference)):
-            os.mkdir(os.path.join(path_to_anc, reference))
-        anc = get_ancillaries(instrument, reference, path_to_data, path_to_anc, start_dt=start_dt, stop_dt=stop_dt)
 
     # Process L2
     if not os.path.isfile(ref + '.L2_SEN3.nc'):
         print('Process L2 ...')
-        os.chdir(ref + '.SEN3/')
+        #os.chdir(ref + '.SEN3/')
         cmd = [OCSSW_RUNNER, '--ocsswroot', PATH_OCSSW, 'l2gen',
                 'suite=' + suite,
                 'ifile=' + ref + '.SEN3/Oa01_radiance.nc',
@@ -145,8 +131,10 @@ def get_ancillaries(sensor, reference, path_to_data, path_to_anc, start_dt=None,
                 'maskland=0',
                 'maskhilt=0']
         if get_anc:
-            for key in sorted(anc.iterkeys()):
-                cmd.append('='.join([key, anc[key]]))
+            foo = filter(lambda x: x != "", ancil_list.split('<>')) # remove empty string
+            anc_key = list(foo)
+            for key in anc_key:
+                cmd.append(key) # append each ancillary file to cmd
         if l2_prod is not None:
             cmd.append('l2prod=' + l2_prod)
         check_call(cmd)
@@ -159,7 +147,6 @@ def process_MSI_L1_to_L2(path_to_data, reference, suite='OC', l2_prod=None, get_
     # Process OLCI Image from compressed L1 to L2_SEN3 using default Nasa Ocean Color parameters
     #   the function will change the current working directory
     ref = os.path.join(path_to_data, reference)
-
     if force:
         if os.path.isdir(ref + '.SAFE'):
             shutil.rmtree(ref + '.SAFE')
@@ -169,26 +156,15 @@ def process_MSI_L1_to_L2(path_to_data, reference, suite='OC', l2_prod=None, get_
             os.remove(ref + '.L2_SEN2_temp.nc')
 
     # Decompress zip
-    unzipS(ref, '.SAFE')
+    if not os.path.isdir(ref + '.SAFE'):
+        unzipS(ref, '.SAFE')
     # check unzip
     check_unzip(ref, '.SAFE')
-
-    if get_anc and not os.path.isfile(ref + '.L2_SEN2.nc'):
-        print('Get Ancillaries ...')
-        os.chdir(path_to_anc)
-        foo = ref.split('_MSIL1C_')
-        foo2 = foo[1].split('_')
-        start_dt = datetime.strptime(foo2[0], '%Y%m%dT%H%M%S')
-        stop_dt = datetime.strptime(foo2[0], '%Y%m%dT%H%M%S') + timedelta(minutes=5)
-        # create ancillary directory specific to that image to avoid conflict between threads
-        if not os.path.isdir(os.path.join(path_to_anc, ref)):
-            os.mkdir(os.path.join(path_to_anc, ref))
-        anc = get_ancillaries('MSI', reference, path_to_data, path_to_anc, start_dt=start_dt.strftime('%Y%j%H%M%S'), stop_dt=stop_dt.strftime('%Y%j%H%M%S'))
 
     # Process L2
     if not os.path.isfile(ref + '.L2_SEN2.nc'):
         print('Process L2 ...')
-        os.chdir(ref + '.SAFE/')
+        #os.chdir(ref + '.SAFE/')
         cmd = [OCSSW_RUNNER, '--ocsswroot', PATH_OCSSW, 'l2gen',
                 'suite=OC',
                 'ifile=' + ref + '.SAFE/manifest.safe',
@@ -200,10 +176,11 @@ def process_MSI_L1_to_L2(path_to_data, reference, suite='OC', l2_prod=None, get_
                 'cloud_wave=2130.0',
                 'maskland=0',
                 'maskhilt=0']
-
         if get_anc:
-            for key in sorted(anc.iterkeys()):
-                cmd.append('='.join([key, anc[key]]))
+            foo = filter(lambda x: x != "", ancil_list.split('<>')) # remove empty string
+            anc_key = list(foo)
+            for key in anc_key:
+                cmd.append(key) # append each ancillary file to cmd
         if l2_prod is not None:
             cmd.append('l2prod=' + l2_prod)
         check_call(cmd)

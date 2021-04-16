@@ -15,8 +15,9 @@ Copyright (c) 2021 Guillaume Bourdin
 __version__ = "0.1.0"
 verbose = False
 
-from SD_ESAtools import *
 import os
+print(os.getcwd())
+from SD_ESAtools import *
 # from multiprocessing import Pool
 import sys
 # import subprocess
@@ -25,38 +26,82 @@ import multiprocessing as mp
 from itertools import repeat
 # import _strptime # to solve multithreading bug
 
+
+
 IM_PREFIX = {
-    'OLCI': ['S3A_OL_1_', 'S3B_OL_1_'],
-    'SLSTR': ['S3A_SL_1_', 'S3B_SL_1_'],
-    'MSI': ['S2A_MSIL1C_', 'S2B_MSIL1C_']
+    'OLCI': 'S3*_OL_1_',
+    'SLSTR': 'S3*_SL_1_',
+    'MSI': 'S2*_MSIL1C_'
     }
 
 IM_SUFFIX = {
-    'OLCI': ['SEN3.zip'],
-    'SLSTR': ['SEN3.zip'],
-    'MSI': ['.zip']
+    'OLCI': '*SEN3',
+    'SLSTR': '*SEN3',
+    'MSI': '*SAFE'
     }
 
-# Process #
-def L2process((ref, instrument, suite, product, force_process)):
-    if instrument == 'OLCI' or instrument == 'SLSTR': ########## OLCI
-      process_SENT3_L1_to_L2(PATH_TO_DATA, ref, instrument=instrument, suite=suite, l2_prod=product, get_anc=True, path_to_anc=PATH_TO_ANC, force=force_process)
-    elif instrument == 'MSI': ########## MSI
-      process_MSI_L1_to_L2(PATH_TO_DATA, ref, suite=suite, l2_prod=product, get_anc=True, path_to_anc=PATH_TO_ANC, force=force_process)
-    print('### Done processing  ' + ref)
+IM_EXT = {
+    'OLCI': '.zip',
+    'SLSTR': '.zip',
+    'MSI': '.zip'
+    }
+
 
 # List L2 files to process #
 def list_file(instrument):
-    sen = options.instrument.split('-')
-    prefix = list()
-    suffix = list()
-    for x in sen:
-      for y in IM_PREFIX[x]:
-        prefix.append(y)
-      for y in IM_SUFFIX[x]:
-        suffix.append(y)
-    references = [s.split('.')[0] for s in os.listdir(PATH_TO_DATA) if s.startswith(tuple(prefix)) and s.endswith(tuple(suffix))]
+    prefix = IM_PREFIX[instrument]
+    suffix = IM_SUFFIX[instrument]
+    ext = IM_EXT[instrument]
+    references = [s.split('.')[0] for s in glob.glob(os.path.join(PATH_TO_DATA, prefix + suffix + ext))]
     return references
+
+
+# get ancillary data for each image and build list to inpu in L2process
+def getancil(references, instrument):
+    print('### Ancillary data recovery ###')
+    os.chdir(PATH_TO_ANC)
+    anc_list = list()
+    for singlref in references:
+      if not glob.glob(os.path.join(PATH_TO_ANC, singlref + IM_SUFFIX[instrument] + '*.anc')) or options.force_process:
+        # create ancillary directory specific to that image to avoid conflict between threads
+        if not os.path.isdir(os.path.join(PATH_TO_ANC, singlref)):
+          os.mkdir(os.path.join(PATH_TO_ANC, singlref))
+        if instrument == 'MSI':
+          foo = singlref.split('_MSIL1C_')
+          foo2 = foo[1].split('_')
+          start_dt = datetime.strptime(foo2[0], '%Y%m%dT%H%M%S')
+          stop_dt = datetime.strptime(foo2[0], '%Y%m%dT%H%M%S') + timedelta(minutes=5)
+          anc = get_ancillaries('MSI', singlref, PATH_TO_DATA, PATH_TO_ANC, start_dt=start_dt.strftime('%Y%j%H%M%S'), stop_dt=stop_dt.strftime('%Y%j%H%M%S'))
+        elif instrument == 'OLCI' or instrument == 'SLSTR' :
+          foo = singlref.split('____')
+          foo2 = foo[1].split('_')
+          start_dt = datetime.strptime(foo2[0], '%Y%m%dT%H%M%S').strftime('%Y%j%H%M%S')
+          stop_dt = datetime.strptime(foo2[1], '%Y%m%dT%H%M%S').strftime('%Y%j%H%M%S')
+          anc = get_ancillaries(instrument, singlref, PATH_TO_DATA, PATH_TO_ANC, start_dt=start_dt, stop_dt=stop_dt)
+        else:
+          return -1
+        anc_key = ''
+        for key in sorted(anc.iterkeys()):
+          anc_key = '<>'.join([anc_key, '='.join([key, anc[key]])])
+        anc_list.append(anc_key)
+      else:
+        print('Get ancillary ' + singlref + ' skip')
+    return anc_list
+
+# Process #
+def L2processP2((ref, instrument, suite, product, force_process)): ### for python2
+    if instrument == 'OLCI' or instrument == 'SLSTR': ########## OLCI
+      process_SENT3_L1_to_L2(PATH_TO_DATA, ref, anc_list, instrument=instrument, suite=suite, l2_prod=product, get_anc=True, path_to_anc=PATH_TO_ANC, force=force_process)
+    elif instrument == 'MSI': ########## MSI
+      process_MSI_L1_to_L2(PATH_TO_DATA, ref, anc_list, suite=suite, l2_prod=product, get_anc=True, path_to_anc=PATH_TO_ANC, force=force_process)
+    print('### Done processing  ' + ref)
+
+def L2processP3(ref, instrument, suite, product, force_process): ### for python3
+    if instrument == 'OLCI' or instrument == 'SLSTR': ########## OLCI
+      process_SENT3_L1_to_L2(PATH_TO_DATA, ref, anc_list, instrument=instrument, suite=suite, l2_prod=product, get_anc=True, path_to_anc=PATH_TO_ANC, force=force_process)
+    elif instrument == 'MSI': ########## MSI
+      process_MSI_L1_to_L2(PATH_TO_DATA, ref, anc_list, suite=suite, l2_prod=product, get_anc=True, path_to_anc=PATH_TO_ANC, force=force_process)
+    print('### Done processing  ' + ref)
 
 
 if __name__ == "__main__":
@@ -118,24 +163,40 @@ if __name__ == "__main__":
         print('SeaDASbatchL2.py: warning: option -f, --force-process option not specified, set to default=False')
 
     PATH_TO_ANC = os.path.join(options.PATH_TO_ROOT, 'anc')
-    PATH_TO_DATA = os.path.join(options.PATH_TO_ROOT, 'data', options.project_name)
+    PATH_TO_DATA = os.path.join(options.PATH_TO_ROOT, options.project_name)
 
     # list images
     references = list_file(options.instrument)
+    # get ancillary data one by one to avoid multithread path conflict
+    anc_list = getancil(references, options.instrument)
 
     if options.parallel_process == 0: # Process images one by one #
       n = len(references)
       for singlref, i in zip(references, range(n)):
-         print('Start process one by one')
-         print('########################################')
-         print('[' + str(i+1) + '/' + str(n) + ']  ' + singlref)
-         print('########################################')
-         L2process((singlref, options.instrument, options.suite, options.product, options.force_process))
+      print('Start process one by one')
+      print('########################################')
+      print('[' + str(i+1) + '/' + str(n) + ']  ' + singlref)
+      print('########################################')
+      if sys.version_info[0] < 3:
+        L2processP2((singlref, anc_list[i], options.instrument, options.suite, options.product, options.force_process)) ####### for python2
+      else:
+        L2processP3(singlref, anc_list[i], options.instrument, options.suite, options.product, options.force_process) ######### for python3
 
     else: # Process to images in parallel
       # Start pool (with the number of thread available on node)
-      pool = ThreadPool(processes=ntask)
       print('Start parallel process')
-      pool.map(L2process, zip(references, repeat(options.instrument), repeat(options.suite), repeat(options.product), repeat(options.force_process)))
-      pool.close()
-      pool.join()
+      pool = ThreadPool(processes=ntask)
+      if sys.version_info[0] < 3: ########################################################################################### for python2
+        pool.map(L2processP2, zip(references, anc_list, repeat(options.instrument), repeat(options.suite), repeat(options.product), repeat(options.force_process)))
+        pool.close()
+        pool.join()
+      else: ################################################################################################################# for python3
+        arg_list = list()
+        for ref in references:
+          arg_list.append([ref, anc_list, options.instrument, options.suite, options.product, options.force_process])
+        pool = ThreadPool(processes=ntask)
+        print('Start parallel process')
+        pool.starmap(L2processP3, arg_list)
+
+
+
