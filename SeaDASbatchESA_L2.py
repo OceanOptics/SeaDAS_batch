@@ -26,8 +26,6 @@ import multiprocessing as mp
 from itertools import repeat
 # import _strptime # to solve multithreading bug
 
-
-
 IM_PREFIX = {
     'OLCI': 'S3*_OL_1_',
     'SLSTR': 'S3*_SL_1_',
@@ -45,7 +43,6 @@ IM_EXT = {
     'SLSTR': '.zip',
     'MSI': '.zip'
     }
-
 
 # List L2 files to process #
 def list_file(instrument):
@@ -175,30 +172,30 @@ if __name__ == "__main__":
     if options.parallel_process == 0: # Process images one by one #
       n = len(references)
       for singlref, i in zip(references, range(n)):
-      print('Start process one by one')
-      print('########################################')
-      print('[' + str(i+1) + '/' + str(n) + ']  ' + singlref)
-      print('########################################')
-      # if sys.version_info[0] < 3:
-      L2processP2((singlref, anc_list[i], options.instrument, options.suite, options.product, options.force_process)) ####### for python2
-      # else:
-      # L2processP3(singlref, anc_list[i], options.instrument, options.suite, options.product, options.force_process) ######### for python3
+        print('Start process one by one')
+        print('########################################')
+        print('[' + str(i+1) + '/' + str(n) + ']  ' + singlref)
+        print('########################################')
+        # if sys.version_info[0] < 3:
+        L2processP2((singlref, anc_list[i], options.instrument, options.suite, options.product, options.force_process)) ####### for python2
+        # else:
+        # L2processP3(singlref, anc_list[i], options.instrument, options.suite, options.product, options.force_process) ######### for python3
 
     else: # Process to images in parallel
       # Start pool (with the number of thread available on node)
       print('Start parallel process')
       pool = ThreadPool(processes=ntask)
       # if sys.version_info[0] < 3: ########################################################################################### for python2
-      pool.map(L2processP2, zip(references, anc_list, repeat(options.instrument), repeat(options.suite), repeat(options.product), repeat(options.force_process)))
-      pool.close()
-      pool.join()
+      # pool.map(L2processP2, zip(references, anc_list, repeat(options.instrument), repeat(options.suite), repeat(options.product), repeat(options.force_process)))
+      # pool.close()
+      # pool.join()
       # else: ################################################################################################################# for python3
-      # arg_list = list()
-      # for ref in references:
-      #   arg_list.append([ref, anc_list, options.instrument, options.suite, options.product, options.force_process])
-      # pool = ThreadPool(processes=ntask)
-      # print('Start parallel process')
-      # pool.starmap(L2processP3, arg_list)
+      arg_list = list()
+      for ref in references:
+        arg_list.append([ref, anc_list, options.instrument, options.suite, options.product, options.force_process])
+      pool = ThreadPool(processes=ntask)
+      print('Start parallel process')
+      pool.starmap(L2processP3, arg_list)
 
 
 
