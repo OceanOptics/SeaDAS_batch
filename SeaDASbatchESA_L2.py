@@ -79,8 +79,8 @@ def getancil(references, instrument):
           return -1
         anc_key = ''
         # for key in sorted(anc.iterkeys()): # for seadas version < 8.00
-        for key in anc: # for seadas version = 8.00
-          anc_key = '<>'.join([anc_key, '='.join([key, anc[key]])])
+        for key, value in anc.items():
+          anc_key = '<>'.join([anc_key, '='.join([key, value])])
         anc_list.append(anc_key)
       else:
         print('Get ancillary ' + singlref + ' skip')
@@ -178,9 +178,9 @@ if __name__ == "__main__":
         print('[' + str(i+1) + '/' + str(n) + ']  ' + singlref)
         print('########################################')
         # if sys.version_info[0] < 3:
-        L2processP2((singlref, anc_list[i], options.instrument, options.suite, options.product, options.force_process)) ####### for python2
+        # L2processP2((singlref, anc_list[i], options.instrument, options.suite, options.product, options.force_process)) ####### for python2
         # else:
-        # L2processP3(singlref, anc_list[i], options.instrument, options.suite, options.product, options.force_process) ######### for python3
+        L2processP3(singlref, anc_list[i], options.instrument, options.suite, options.product, options.force_process) ######### for python3
 
     else: # Process to images in parallel
       # Start pool (with the number of thread available on node)
