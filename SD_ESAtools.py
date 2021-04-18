@@ -19,13 +19,15 @@ import sys
 
 # Setup path to OCSSW / OCSSW_RUNNER / modules directory in OCSSW
 PATH_OCSSW = '/home/bjiang/ocssw'
-OCSSW_RUNNER = PATH_OCSSW + '/bin/ocssw_runner'
+OCSSW_RUNNER = PATH_OCSSW + '/bin/ocssw_runner' ## Seadas8.00 architecture
 sys.path.insert(0, os.path.join(PATH_OCSSW, 'bin')) ## Seadas8.00 architecture
-# sys.path.insert(0, os.path.join(PATH_OCSSW, 'scripts')) ## Seadas version < 8.00 architecture
+import seadasutils.anc_utils as ga ## Seadas8.00 architecture
+from seadasutils.setupenv import env## Seadas8.00 architecture
 
-# Import get_ancillaries modules
-import seadasutils.anc_utils as ga
-from seadasutils.setupenv import env
+# OCSSW_RUNNER = PATH_OCSSW + '/scripts/ocssw_runner' ## Seadas version < 8.00 architecture
+# sys.path.insert(0, os.path.join(PATH_OCSSW, 'scripts')) ## Seadas version < 8.00 architecture
+# import modules.anc_utils as ga ## Seadas version < 8.00 architecture
+# from modules.setupenv import env ## Seadas version < 8.00 architecture
 
 
 def unzipS(ref, suffix):
