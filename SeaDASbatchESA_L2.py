@@ -33,9 +33,9 @@ IM_PREFIX = {
     }
     
 IM_SUFFIX = {
-    'OLCI': 'SEN3',
-    'SLSTR': 'SEN3',
-    'MSI': 'SAFE'
+    'OLCI': '.SEN3',
+    'SLSTR': '.SEN3',
+    'MSI': '.SAFE'
     }
 
 IM_EXT = {

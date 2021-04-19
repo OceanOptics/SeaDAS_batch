@@ -67,10 +67,7 @@ def get_ancillaries(sensor, reference, path_to_data, path_to_anc, start_dt=None,
 
     # add random sleep time to avoid overload OBPG server
     # sleep(random.uniform(0, 10))
-    if sensor == 'OLCI' or sensor == 'SLSTR':
-        ref = os.path.join(path_to_data, reference) + '.SEN3'
-    elif sensor == 'MSI':
-        ref = os.path.join(path_to_data, reference) + '.SAFE'
+    ref = os.path.join(path_to_data, reference)
 
     # Start and Stop dt must be YYYYDDDHHMMSS strings
     if reference is not None and start_dt is None and stop_dt is None:
