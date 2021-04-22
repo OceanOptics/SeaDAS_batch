@@ -87,8 +87,10 @@ def getancil(references, instrument):
         anc_list.append(anc_key)
       else:
         print('Get ancillary ' + os.path.split(singlref)[1] + IM_SUFFIX[instrument] + ' skip')
-        anc_list = open(os.path.join(PATH_TO_ANC, os.path.split(singlref)[1] + IM_SUFFIX[instrument] + IM_SUFFIX[instrument] + '*.anc'), "w").read()
-        anc_list = anc_list.replace('\n', '<>')
+        anc_file = open(os.path.join(PATH_TO_ANC, os.path.split(singlref)[1] + IM_SUFFIX[instrument] + '.anc'), "r")
+        anc_key = anc_file.read()
+        anc_file.close()
+        anc_list.append(anc_key.replace('\n', '<>'))
     return anc_list
 
 # # Process #
